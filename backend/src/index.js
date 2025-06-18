@@ -61,7 +61,8 @@ app.use(helmet({
 const allowedOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
-  process.env.FRONTEND_URL
+  process.env.FRONTEND_URL,
+  'https://spotify-clone-6wol.onrender.com'
 ].filter(Boolean);
 
 app.use(cors({
