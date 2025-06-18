@@ -51,68 +51,73 @@ const AddSongDialog = () => {
     const audioInputRef = useRef<HTMLInputElement>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
 
-    const handleSubmit = async () => {
-        setIsLoading(true);
+const handleSubmit = async () => {
+  setIsLoading(true);
+  try {
+    if (!newSong.title.trim() || !newSong.artist.trim()) {
+      return toast.error("Title and artist are required");
+    }
 
-        try {
-            if (!newSong.title.trim() || !newSong.artist.trim()) {
-                return toast.error("Title and artist are required");
-            }
+    if (!files.audio || !files.image) {
+      return toast.error("Please upload both audio and image files");
+    }
 
-            if (!files.audio || !files.image) {
-                return toast.error("Please upload both audio and image files");
-            }
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    if (files.audio.size > MAX_FILE_SIZE || files.image.size > MAX_FILE_SIZE) {
+      return toast.error("File size should not exceed 10MB");
+    }
 
-            const MAX_FILE_SIZE = 10 * 1024 * 1024;
-            if (files.audio.size > MAX_FILE_SIZE || files.image.size > MAX_FILE_SIZE) {
-                return toast.error("File size should not exceed 10MB");
-            }
+    const validAudioTypes = ["audio/mpeg", "audio/wav", "audio/mp3"];
+    const validImageTypes = ["image/jpeg", "image/png", "image/webp"];
 
-            const validAudioTypes = ["audio/mpeg", "audio/wav", "audio/mp3"];
-            const validImageTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!validAudioTypes.includes(files.audio.type)) {
+      return toast.error("Invalid audio format. Please upload MP3 or WAV");
+    }
 
-            if (!validAudioTypes.includes(files.audio.type)) {
-                return toast.error("Invalid audio format. Please upload MP3 or WAV");
-            }
+    if (!validImageTypes.includes(files.image.type)) {
+      return toast.error("Invalid image format. Please upload JPEG, PNG or WEBP");
+    }
 
-            if (!validImageTypes.includes(files.image.type)) {
-                return toast.error("Invalid image format. Please upload JPEG, PNG or WEBP");
-            }
+    const parsedDuration = Number(newSong.duration);
+    if (isNaN(parsedDuration) || parsedDuration < 0) {
+      return toast.error("Invalid duration. Must be a non-negative number");
+    }
 
-            const formData = new FormData();
-            formData.append("title", newSong.title);
-            formData.append("artist", newSong.artist);
-            formData.append("duration", String(Number(newSong.duration)));
-            formData.append("albumId", newSong.album === "none" ? "" : newSong.album);
-            formData.append("audioFile", files.audio);
-            formData.append("coverImage", files.image);
+    const formData = new FormData();
+    formData.append("title", newSong.title);
+    formData.append("artist", newSong.artist);
+    formData.append("duration", String(parsedDuration));
+    formData.append("albumId", newSong.album === "none" ? "" : newSong.album);
+    formData.append("audioFile", files.audio);
+    formData.append("coverImage", files.image);
 
-            const token = await getToken();
+    const token = await getToken();
 
-            await axiosInstance.post("/admin/songs", formData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+    await axiosInstance.post("/admin/songs", formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-            setNewSong({ title: "", artist: "", album: "", duration: "0" });
-            setFiles({ audio: null, image: null });
-            toast.success("Song added successfully");
-            setSongDialogOpen(false);
-        } catch (error: any) {
-            console.error("Error adding song:", error);
+    setNewSong({ title: "", artist: "", album: "", duration: "0" });
+    setFiles({ audio: null, image: null });
+    toast.success("Song added successfully");
+    setSongDialogOpen(false);
+  } catch (error: any) {
+    console.error("Error adding song:", error);
 
-            if (error.response) {
-                toast.error(error.response.data.message || "Failed to add song");
-            } else if (error.request) {
-                toast.error("No response from server. Please try again.");
-            } else {
-                toast.error("Error setting up request: " + error.message);
-            }
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    if (error.response) {
+      toast.error(error.response.data.message || "Failed to add song");
+    } else if (error.request) {
+      toast.error("No response from server. Please try again.");
+    } else {
+      toast.error("Error setting up request: " + error.message);
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
     return (
         <Dialog open={songDialogOpen} onOpenChange={setSongDialogOpen}>

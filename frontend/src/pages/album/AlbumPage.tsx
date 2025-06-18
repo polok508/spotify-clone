@@ -7,10 +7,11 @@ import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 
 export const formatDuration = (seconds: number) => {
+    if (typeof seconds !== "number" || isNaN(seconds)) return "0:00";
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-}
+};
 
 const AlbumPage = () => {
     const { albumId } = useParams();
@@ -21,23 +22,31 @@ const AlbumPage = () => {
         if (albumId) fetchAlbumById(albumId);
     }, [fetchAlbumById, albumId]);
 
-    if (isLoading) return null;
+    if (isLoading || !currentAlbum) return null;
+
+    const songs = Array.isArray(currentAlbum?.songs)
+        ? currentAlbum.songs.filter(
+              (song) =>
+                  song &&
+                  typeof song._id === "string" &&
+                  typeof song.title === "string" &&
+                  typeof song.artist === "string" &&
+                  typeof song.imageUrl === "string" &&
+                  typeof song.duration === "number"
+          )
+        : [];
 
     const handlePlayAlbum = () => {
-        if (!currentAlbum || !Array.isArray(currentAlbum.songs)) return;
-        const isCurrentAlbumPlaying = currentAlbum.songs.some(song => song._id === currentSong?._id);
+        if (!songs.length) return;
+        const isCurrentAlbumPlaying = songs.some((song) => song._id === currentSong?._id);
         if (isCurrentAlbumPlaying) togglePlay();
-        else {
-            playAlbum(currentAlbum.songs, 0);
-        }
-    }
+        else playAlbum(songs, 0);
+    };
 
     const handlePlaySong = (index: number) => {
-        if (!currentAlbum || !Array.isArray(currentAlbum.songs)) return;
-        playAlbum(currentAlbum.songs, index);
-    }
-
-    const songs = Array.isArray(currentAlbum?.songs) ? currentAlbum.songs : [];
+        if (!songs.length) return;
+        playAlbum(songs, index);
+    };
 
     return (
         <div className="h-full bg-zinc-900">
@@ -46,14 +55,18 @@ const AlbumPage = () => {
                     <div className="absolute inset-0 bg-gradient-to-b from-[#5038a0]/80 via-zinc-900/80 to-zinc-900 pointer-events-none" aria-hidden="true" />
                     <div className="relative z-10">
                         <div className="flex p-6 gap-6 pb-8">
-                            <img src={currentAlbum?.imageUrl} alt={currentAlbum?.title} className="w-[240px] h-[240px] shadow-x1 rounded" />
+                            <img
+                                src={currentAlbum.imageUrl || ""}
+                                alt={currentAlbum.title || "Album Cover"}
+                                className="w-[240px] h-[240px] shadow-x1 rounded"
+                            />
                             <div className="flex flex-col justify-end">
                                 <p className="text-sm font-medium">Album</p>
-                                <h1 className="text-7xl font-bold my-4">{currentAlbum?.title}</h1>
+                                <h1 className="text-7xl font-bold my-4">{currentAlbum.title || "Unknown Title"}</h1>
                                 <div className="flex items-center gap-2 text-sm text-zinc-100">
-                                    <span className="font-medium text-white">{currentAlbum?.artist}</span>
+                                    <span className="font-medium text-white">{currentAlbum.artist || "Unknown Artist"}</span>
                                     <span>• {songs.length} songs</span>
-                                    <span>• {currentAlbum?.releaseYear}</span>
+                                    <span>• {currentAlbum.releaseYear || "Year N/A"}</span>
                                 </div>
                             </div>
                         </div>
@@ -82,7 +95,11 @@ const AlbumPage = () => {
                                 {songs.map((song, index) => {
                                     const isCurrentSong = currentSong?._id === song._id;
                                     return (
-                                        <div key={song._id} onClick={() => handlePlaySong(index)} className="grid grid-cols-[16px_4fr_2fr_1fr] gap-4 px-4 py-2 text-sm text-zinc-400 hover:bg-white/5 rounded-md group cursor-pointer">
+                                        <div
+                                            key={song._id}
+                                            onClick={() => handlePlaySong(index)}
+                                            className="grid grid-cols-[16px_4fr_2fr_1fr] gap-4 px-4 py-2 text-sm text-zinc-400 hover:bg-white/5 rounded-md group cursor-pointer"
+                                        >
                                             <div className="flex items-center justify-center">
                                                 {isCurrentSong && isPlaying ? (
                                                     <div className="h-4 w-4 text-green-500">♫</div>
@@ -95,15 +112,25 @@ const AlbumPage = () => {
                                             </div>
 
                                             <div className="flex items-center gap-3">
-                                                <img src={song.imageUrl} alt={song.title} className="size-10" />
+                                                <img
+                                                    src={song.imageUrl}
+                                                    alt={song.title}
+                                                    className="size-10"
+                                                />
                                                 <div>
                                                     <div className="font-medium text-white">{song.title}</div>
                                                     <div>{song.artist}</div>
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center">{song.createdAt?.split("T")[0]}</div>
-                                            <div className="flex items-center">{formatDuration(song.duration)}</div>
+                                            <div className="flex items-center">
+                                                {typeof song.createdAt === "string"
+                                                    ? song.createdAt.split("T")[0]
+                                                    : "N/A"}
+                                            </div>
+                                            <div className="flex items-center">
+                                                {formatDuration(song.duration)}
+                                            </div>
                                         </div>
                                     );
                                 })}
@@ -114,6 +141,6 @@ const AlbumPage = () => {
             </ScrollArea>
         </div>
     );
-}
+};
 
 export default AlbumPage;

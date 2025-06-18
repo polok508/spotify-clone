@@ -1,5 +1,5 @@
 import { axiosInstance } from '@/lib/axios';
-import {create} from 'zustand';
+import { create } from 'zustand';
 import { type Song, type Album, type Stats } from '@/types';
 import toast from 'react-hot-toast';
 
@@ -42,173 +42,148 @@ export const useMusicStore = create<MusicStore>((set) => ({
     },
 
     deleteSong: async (id) => {
-        set({isLoading: true, error: null});
+        set({ isLoading: true, error: null });
         try {
-
             await axiosInstance.delete(`/admin/songs/${id}`);
-
             set(state => ({
                 songs: state.songs.filter(song => song._id !== id)
-            }))
-
+            }));
             toast.success("Song deleted successfully");
-
         } catch (error: any) {
-            
-            console.log("Error is deleteSong", error);
+            console.error("Error in deleteSong", error);
             toast.error("Error deleting song");
-
-        } finally{
-            set({isLoading: false});
+        } finally {
+            set({ isLoading: false });
         }
     },
 
     deleteAlbum: async (id) => {
-        set({isLoading: true, error: null});
-        
+        set({ isLoading: true, error: null });
         try {
             await axiosInstance.delete(`/admin/albums/${id}`);
             set((state) => ({
                 albums: state.albums.filter((album) => album._id !== id),
                 songs: state.songs.map((song) =>
-                song.albumId === state.albums.find((a) => a._id === id)?.title ? {...song, album: null} : song),
+                    song.albumId === state.albums.find((a) => a._id === id)?.title ? { ...song, album: null } : song
+                ),
             }));
-
             toast.success("Album deleted successfully");
-
         } catch (error: any) {
-
-            toast.error("Failed to delete album" + error.message);
-            
-        } finally{
-            set({isLoading: false});
+            toast.error("Failed to delete album: " + (error.response?.data?.message || error.message));
+        } finally {
+            set({ isLoading: false });
         }
     },
 
-
     fetchSongs: async () => {
-            set({isLoading: true, error: null});
-
+        set({ isLoading: true, error: null });
         try {
-
             const response = await axiosInstance.get("/songs");
-            set({songs: response.data});
-            
+            if (Array.isArray(response.data)) {
+                set({ songs: response.data });
+            } else {
+                set({ error: "Unexpected response format for songs" });
+            }
         } catch (error: any) {
-
-            set({error: error.response.data.message});
-            
-        } finally{
-            set({isLoading: false});
+            set({ error: error.response?.data?.message || error.message });
+        } finally {
+            set({ isLoading: false });
         }
     },
 
     fetchStats: async () => {
-        set({isLoading: true, error: null});
-
+        set({ isLoading: true, error: null });
         try {
-
             const response = await axiosInstance.get("/stats");
-            set({stats: response.data});
-            
+            if (response.data && typeof response.data === 'object') {
+                set({ stats: response.data });
+            } else {
+                set({ error: "Unexpected response format for stats" });
+            }
         } catch (error: any) {
-
-            set({error: error.response.data.message});
-            
-        } finally{
-            set({isLoading: false});
+            set({ error: error.response?.data?.message || error.message });
+        } finally {
+            set({ isLoading: false });
         }
     },
 
     fetchAlbums: async () => {
-
-        set({isLoading: true, error: null});
-
+        set({ isLoading: true, error: null });
         try {
-
             const response = await axiosInstance.get("/albums");
-            set({albums: response.data});
-            
+            if (Array.isArray(response.data)) {
+                set({ albums: response.data });
+            } else {
+                set({ error: "Unexpected response format for albums" });
+            }
         } catch (error: any) {
-
-            set({error: error.response.data.message});
-            
-        } finally{
-            set({isLoading: false});
+            set({ error: error.response?.data?.message || error.message });
+        } finally {
+            set({ isLoading: false });
         }
-
     },
 
     fetchAlbumById: async (id) => {
-        set({isLoading: true, error: null});
+        set({ isLoading: true, error: null });
         try {
-
             const response = await axiosInstance.get(`/albums/${id}`);
-            set({currentAlbum: response.data});
-            
+            if (response.data && typeof response.data === 'object') {
+                set({ currentAlbum: response.data });
+            } else {
+                set({ error: "Unexpected response format for album" });
+            }
         } catch (error: any) {
-
-            set({error: error.response.data.message});
-            
+            set({ error: error.response?.data?.message || error.message });
         } finally {
-            set({isLoading: false});
+            set({ isLoading: false });
         }
     },
 
-	fetchFeaturedSongs: async () => {
+    fetchFeaturedSongs: async () => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await axiosInstance.get("/songs/featured");
+            if (Array.isArray(response.data)) {
+                set({ featuredSongs: response.data });
+            } else {
+                set({ error: "Unexpected response format for featured songs" });
+            }
+        } catch (error: any) {
+            set({ error: error.response?.data?.message || error.message });
+        } finally {
+            set({ isLoading: false });
+        }
+    },
 
-		set({isLoading: true, error: null});
+    fetchMadeForYouSongs: async () => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await axiosInstance.get("/songs/made-for-you");
+            if (Array.isArray(response.data)) {
+                set({ madeForYouSongs: response.data });
+            } else {
+                set({ error: "Unexpected response format for made-for-you songs" });
+            }
+        } catch (error: any) {
+            set({ error: error.response?.data?.message || error.message });
+        } finally {
+            set({ isLoading: false });
+        }
+    },
 
-		try {
-
-			const response = await axiosInstance.get("/songs/featured");
-			set({featuredSongs: response.data});
-
-		} catch (error: any) {
-
-			set({error: error.response.data.message});
-
-		} finally {
-
-			set({isLoading: false});
-		}
-	},
-
-	fetchMadeForYouSongs: async () => {
-
-		set({isLoading: true, error: null});
-
-		try {
-
-			const response = await axiosInstance.get("/songs/made-for-you");
-			set({madeForYouSongs: response.data});
-
-		} catch (error: any) {
-
-			set({error: error.response.data.message});
-
-		} finally {
-
-			set({isLoading: false});
-		}
-	},
-
-	fetchTrendingSongs: async () => {
-
-		set({isLoading: true, error: null});
-
-		try {
-
-			const response = await axiosInstance.get("/songs/trending");
-			set({trendingSongs: response.data});
-
-		} catch (error: any) {
-
-			set({error: error.response.data.message});
-
-		} finally {
-            
-			set({isLoading: false});
-		}
-	},
+    fetchTrendingSongs: async () => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await axiosInstance.get("/songs/trending");
+            if (Array.isArray(response.data)) {
+                set({ trendingSongs: response.data });
+            } else {
+                set({ error: "Unexpected response format for trending songs" });
+            }
+        } catch (error: any) {
+            set({ error: error.response?.data?.message || error.message });
+        } finally {
+            set({ isLoading: false });
+        }
+    },
 }));
