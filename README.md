@@ -1,3 +1,30 @@
+# 🎵 Spotify Clone 🎵
+
+**🌐 Ссылка на проект:**  
+[https://spotify-clone-6wol.onrender.com/](https://spotify-clone-6wol.onrender.com/)
+
+---
+
+## 📱 Скриншоты приложения
+
+### 🔐 Главный экран до входа / регистрации  
+![Главный экран до входа](./screenshots/screen1.png)
+
+### 🏠 Главный экран после входа / регистрации  
+![Главный экран после входа](./screenshots/screen2.png)
+
+### ⚙️ Панель админа (добавление песен и альбомов)  
+![Панель админа 1](./screenshots/screen3.png)  
+![Панель админа 2](./screenshots/screen4.png)  
+![Панель админа 3](./screenshots/screen5.png)
+
+### 💬 Текстовый мессенджер  
+![Мессенджер 1](./screenshots/screen6.png)  
+![Мессенджер 2](./screenshots/screen7.png)
+
+
+
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
